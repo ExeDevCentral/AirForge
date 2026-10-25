@@ -5,16 +5,17 @@ Common issues and solutions when deploying Wi-Fi Hotspots with Realtek USB dongl
 ---
 
 ### 1. Mobile Phone doesn't see the Wi-Fi Network
-* **Cause**: RTL8188EUS in certain regulatory domains emits beacons passively, behaving like a hidden network.
+* **Cause**: RTL8188EUS in certain regulatory domains restricts channel broadcast, or operates in passive scanning before BSS activation.
 * **Solution**:
   1. Make sure your wireless regulatory domain is set:
      ```bash
      sudo iw reg set US   # or AR, ES, etc.
      ```
   2. If the phone still doesn't show it automatically, choose **"Add Network Manually"** in your phone Wi-Fi settings:
-     - Name (SSID): `Red-Exeq-WiFi`
+     - Name (SSID): `Red-Exeq-WiFi` (or configured SSID)
      - Security: `WPA/WPA2-Personal`
-     - Password: `ConexionSegura2026!`
+     - Password: `Central1985` (or configured passphrase)
+  3. Or scan the instant pairing QR code directly via `baliza qr`.
 
 ---
 
@@ -29,15 +30,15 @@ Common issues and solutions when deploying Wi-Fi Hotspots with Realtek USB dongl
   ```bash
   sudo sysctl -w net.ipv4.ip_forward=1
   ```
-  Our installer creates `/etc/sysctl.d/99-ip-forward.conf` to make this setting persistent across reboots.
+  Baliza's installer creates `/etc/sysctl.d/99-ip-forward.conf` to make this setting persistent across reboots.
 
 ---
 
 ### 3. After a Kernel Update, the Hotspot Fails to Start
-* **Cause**: Kernel modules are tied to specific kernel versions (`/lib/modules/$(uname -r)/`).
+* **Cause**: Out-of-tree kernel modules are compiled against a specific kernel version (`/lib/modules/$(uname -r)/`).
 * **Solution**:
   Simply run the auto-rebuilder:
   ```bash
-  hotspot rebuild
+  baliza rebuild
   ```
-  It will compile the module against the newly running kernel, strip unneeded symbols, install it, and reload the driver in seconds.
+  It compiles the module against your newly booted kernel, strips debug symbols, installs it, and reloads the driver in seconds.

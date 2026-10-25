@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# AirForge ⚡ Automated System Uninstaller
+# Baliza 📡 Automated System Uninstaller
 # Author: Exequiel Echevarria <exemetal@hotmail.com> (ExeDevCentral)
-# License: MIT
-# Repository: https://github.com/ExeDevCentral/AirForge
+# License: GNU General Public License v2.0 (GPL-2.0)
+# Repository: https://github.com/ExeDevCentral/Baliza
 # ==============================================================================
 
 set -eo pipefail
@@ -20,17 +20,17 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-echo -e "${YELLOW}${BOLD}Desinstalando AirForge...${RESET}"
+echo -e "${YELLOW}${BOLD}Desinstalando Baliza...${RESET}"
 
-# Detener conexión y servicio
+# Detener conexión y servicios
 nmcli connection down Hotspot 2>/dev/null || true
-systemctl stop airforge.service 2>/dev/null || systemctl stop hotspot.service 2>/dev/null || true
-systemctl disable airforge.service 2>/dev/null || systemctl disable hotspot.service 2>/dev/null || true
-rm -f /etc/systemd/system/airforge.service /etc/systemd/system/hotspot.service
+systemctl stop baliza.service 2>/dev/null || systemctl stop airforge.service 2>/dev/null || systemctl stop hotspot.service 2>/dev/null || true
+systemctl disable baliza.service 2>/dev/null || systemctl disable airforge.service 2>/dev/null || systemctl disable hotspot.service 2>/dev/null || true
+rm -f /etc/systemd/system/baliza.service /etc/systemd/system/airforge.service /etc/systemd/system/hotspot.service
 systemctl daemon-reload
 
-# Eliminar binarios
-rm -f /usr/local/bin/airforge /usr/local/bin/hotspot
+# Eliminar binarios y enlaces
+rm -f /usr/local/bin/baliza /usr/local/bin/airforge /usr/local/bin/hotspot
 
 # Eliminar configuraciones del kernel
 rm -f /etc/modprobe.d/8188eu.conf
@@ -41,4 +41,4 @@ KERNEL_VER="$(uname -r)"
 rm -f "/lib/modules/$KERNEL_VER/kernel/drivers/net/wireless/8188eu.ko"
 depmod -a
 
-echo -e "${GREEN}✓ Desinstalación completada con éxito. AirForge ha sido removido del sistema.${RESET}"
+echo -e "${GREEN}✓ Desinstalación completada con éxito. Baliza ha sido removido del sistema.${RESET}"

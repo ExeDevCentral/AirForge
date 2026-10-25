@@ -14,17 +14,26 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Validate Bash Script Syntax
+      - name: Validate Bash Script Syntax (bash -n)
         run: |
-          bash -n bin/hotspot
+          bash -n bin/baliza
           bash -n install.sh
           bash -n uninstall.sh
           echo "All shell scripts passed syntax validation."
 
-      - name: Verify Config Files
+      - name: Run ShellCheck Linting
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './bin'
+          additional_files: 'install.sh uninstall.sh'
+        continue-on-error: true
+
+      - name: Verify Config Files & Service Units
         run: |
           test -f config/8188eu.conf
           test -f config/blacklist-rtl8xxxu.conf
           test -f config/99-ip-forward.conf
-          test -f config/hotspot.service
-          echo "Configuration files verified."
+          test -f config/baliza.service
+          test -f patches/README.md
+          test -f docs/TECHNICAL_REPORT.md
+          echo "Configuration files and technical reports verified."

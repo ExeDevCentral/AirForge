@@ -1,0 +1,28 @@
+From: Exequiel Echevarria <exemetal@hotmail.com>
+Subject: [PATCH 1/4] include: support timer_delete_sync on Linux 6.15+
+
+Linux 6.15 removed the deprecated del_timer_sync() interface.
+Switch to timer_delete_sync() conditionally for kernels >= 6.15.0.
+
+---
+ include/osdep_service_linux.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/include/osdep_service_linux.h b/include/osdep_service_linux.h
+index a12e5c8..98fa321 100644
+--- a/include/osdep_service_linux.h
++++ b/include/osdep_service_linux.h
+@@ -387,7 +387,11 @@ __inline static void _set_timer(_timer *ptimer, u32 delay_time)
+ 
+ __inline static void _cancel_timer(_timer *ptimer, u8 *bcancelled)
+ {
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0))
++	*bcancelled = timer_delete_sync(&ptimer->timer) == 1 ? 1 : 0;
++#else
+ 	*bcancelled = del_timer_sync(&ptimer->timer) == 1 ? 1 : 0;
++#endif
+ }
+ 
+ static inline void _init_workitem(_workitem *pwork, void *pfunc, void *cntx)
+-- 
+2.45.0

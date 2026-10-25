@@ -1,0 +1,26 @@
+From: Exequiel Echevarria <exemetal@hotmail.com>
+Subject: [PATCH 4/4] hal: use strscpy for Linux 7.2+ string operations
+
+Modern kernels strictly discourage strncpy in favor of strscpy to avoid
+unterminated buffers and compiler fortification warnings.
+
+---
+ hal/hal_com_phycfg.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hal/hal_com_phycfg.c b/hal/hal_com_phycfg.c
+index 81bca10..3729d10 100644
+--- a/hal/hal_com_phycfg.c
++++ b/hal/hal_com_phycfg.c
+@@ -17,6 +17,10 @@
+ #include <drv_types.h>
+ #include <hal_data.h>
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
++#define strncpy strscpy
++#endif
++
+ #define PG_TXPWR_1PATH_BYTE_NUM_2G 18
+ #define PG_TXPWR_BASE_BYTE_NUM_2G 11
+-- 
+2.45.0
