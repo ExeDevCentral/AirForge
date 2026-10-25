@@ -1,0 +1,30 @@
+name: CI Quality & Syntax Validation
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Lint & Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Bash Script Syntax
+        run: |
+          bash -n bin/hotspot
+          bash -n install.sh
+          bash -n uninstall.sh
+          echo "All shell scripts passed syntax validation."
+
+      - name: Verify Config Files
+        run: |
+          test -f config/8188eu.conf
+          test -f config/blacklist-rtl8xxxu.conf
+          test -f config/99-ip-forward.conf
+          test -f config/hotspot.service
+          echo "Configuration files verified."

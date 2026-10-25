@@ -1,0 +1,15 @@
+[Unit]
+Description=RTL8188EU Wi-Fi Hotspot & Routing Manager
+After=network.target NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/sbin/modprobe 8188eu
+ExecStart=/usr/bin/nmcli connection up Hotspot
+ExecStop=/usr/bin/nmcli connection down Hotspot
+TimeoutStartSec=30
+
+[Install]
+WantedBy=multi-user.target
