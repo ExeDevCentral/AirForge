@@ -1,134 +1,217 @@
-# rtl8188eu-hotspot-toolkit 📡
+# AirForge ⚡ Universal Linux Hotspot Engine & Driver Orchestrator
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Linux Kernel: 6.x & 7.x](https://img.shields.io/badge/Linux_Kernel-6.x%20%7C%207.x%20Ready-green.svg)](https://kernel.org)
-[![Tested On: Arch Linux](https://img.shields.io/badge/Tested%20On-Arch%20Linux%20%7C%20Debian%20%7C%20Ubuntu-orange.svg)]()
-[![CLI: hotspot](https://img.shields.io/badge/CLI-hotspot-cyan.svg)](bin/hotspot)
-[![Maintenance: Active](https://img.shields.io/badge/Maintained%3F-yes-brightgreen.svg)]()
+<p align="center">
+  <img src="https://img.shields.io/badge/AirForge-v1.1.0-00d4ff?style=for-the-badge&logo=wifi&logoColor=white" alt="Version">
+  <img src="https://img.shields.io/badge/Linux_Kernels-6.x_%7C_7.x_Verified-34d399?style=for-the-badge&logo=linux&logoColor=white" alt="Kernels">
+  <img src="https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/badge/Architecture-x86__64_%7C_aarch64-ec4899?style=for-the-badge" alt="Arch">
+</p>
 
-> **Automated Linux Wi-Fi Access Point manager, modern kernel driver patcher, and interactive terminal HUD for Realtek RTL8188EUS and USB Wi-Fi dongles.**
+```
+    ___    _        ______                         
+   /   |  (_)_____ / ____/___  _________ ____      
+  / /| | / / ___// /_  / __ \/ ___/ __ `/ _ \     
+ / ___ |/ / /   / __/ / /_/ / /  / /_/ /  __/     
+/_/  |_/_/_/   /_/    \____/_/   \__, /\___/      
+                                /____/            
+    UNIVERSAL LINUX HOTSPOT ENGINE & DRIVER SUITE
+```
 
-Turn any low-cost Realtek RTL8188EUS (`0bda:8179`) USB Wi-Fi adapter into an ultra-reliable, high-performance Linux Access Point (Hotspot) with zero headache. Built to thrive on modern Linux distributions running Kernels **6.x and 7.x** (e.g. `7.2.11+`).
+> **AirForge** transforms any Linux desktop, workstation, or headless single-board computer (Raspberry Pi / mini-PC) into an enterprise-grade, high-performance **Wi-Fi Access Point (Hotspot)**. It features autonomous kernel driver patching for problematic USB Wi-Fi dongles, a terminal HUD with real-time telemetry, and instant smartphone pairing via terminal QR codes.
 
 ---
 
 ## ⚡ The Problem & The Solution
 
-| The Problem on Modern Linux | How this Toolkit Solves It |
+Millions of users purchase budget USB Wi-Fi dongles (such as Realtek RTL8188EUS / RTL8188ETV) or attempt to share their PC's Ethernet connection over Wi-Fi, only to face kernel incompatibilities and dropped connections on modern Linux distributions:
+
+| The Problem on Modern Linux | How AirForge Solves It |
 | :--- | :--- |
-| **In-tree `rtl8xxxu` driver fails at AP mode**: Drops beacons, ignores clients, or crashes. | Automatically blacklists `rtl8xxxu` and compiles a patched, stable `8188eu.ko` driver with full Master/AP mode support. |
-| **Broken upstream compilation on Linux 6.x/7.x**: Deprecated timer functions (`del_timer_sync`) and Kbuild flag errors break older driver repos. | Driver source includes patches for modern Linux kernel timer subsystems and strict modern Kbuild flags. |
-| **Random Wi-Fi disconnects**: Cheaper dongles sleep aggressively due to default USB power savings. | Pre-configured kernel flags (`rtw_power_mgnt=0 rtw_ips_mode=0 rtw_enusbss=0`) permanently prevent USB auto-suspension. |
-| **Tedious smartphone connection**: Typing 16+ character passwords manually on mobile devices. | Built-in **ASCII QR Code generator** right inside your terminal: point your phone camera and connect instantly. |
-| **No insight into connected devices**: Hard to know who is connected or how much bandwidth is flowing. | Real-time CLI HUD with live ARP table scanning, IP/MAC tracking, and network traffic counters. |
+| **In-tree `rtl8xxxu` driver fails in AP mode**: Linux kernel defaults to a driver that drops beacons, refuses client association, or crashes. | **Autonomous Driver Orchestration**: Automatically blacklists `rtl8xxxu` and compiles an optimized `8188eu.ko` driver with full Master/AP mode support. |
+| **Broken upstream compilation on Linux 6.x and 7.x**: Legacy driver trees fail to compile due to `del_timer_sync` deprecations and strict modern Kbuild rules. | **Bleeding-Edge Kernel Patches**: Driver source is patched for modern Linux timer subsystems and current GCC/Clang tooling (tested on `7.2.11+`). |
+| **Ghost disconnects & sleep freeze**: Cheap USB dongles aggressively enter USB auto-suspend after minutes of radio inactivity. | **Hardware PHY Locking**: Permanently disables sleep via kernel parameters (`rtw_power_mgnt=0 rtw_ips_mode=0 rtw_enusbss=0`). |
+| **Tedious password entry on smartphones**: Typing 16+ character WPA2 passphrases manually on touchscreens is error-prone. | **Terminal QR Code Scanner**: Built-in ANSI UTF-8 QR code generator (`airforge qr`). Point any iPhone or Android camera to connect in 1 second. |
+| **Zero visibility into network traffic**: Traditional tools provide no easy way to see who is connected or how much data is flowing. | **Real-Time HUD & Live Monitor**: Inspect connected devices directly from kernel ARP tables with IP/MAC tracking and live bandwidth counters. |
 
 ---
 
-## 🚀 Quick Start (Automated Installation)
+## 🚀 Quick Start (Automated 1-Command Installation)
 
-Clone the repository and run the automated installer:
+AirForge installs cleanly on **Arch Linux, Debian, Ubuntu, Fedora, Manjaro, Linux Mint**, and **Raspberry Pi OS**:
 
 ```bash
-git clone https://github.com/ExeDevCentral/rtl8188eu-hotspot-toolkit.git
-cd rtl8188eu-hotspot-toolkit
+git clone https://github.com/ExeDevCentral/AirForge.git
+cd AirForge
 sudo ./install.sh
 ```
 
-The installer automatically:
-1. Detects and installs required build packages (`make`, `gcc`, `bc`, `NetworkManager`).
-2. Configures kernel module options to disable power saving and blacklist conflicting drivers.
-3. Compiles `8188eu.ko` against your running kernel and installs it.
-4. Deploys the [`hotspot`](bin/hotspot) CLI globally to `/usr/local/bin/hotspot`.
-5. Enables IP packet forwarding and starts the Wi-Fi Access Point.
+### What the installer handles automatically:
+1. Resolves and installs system build prerequisites (`base-devel`, `dkms`, `NetworkManager`, `qrencode`).
+2. Configures kernel module options to blacklist conflicting drivers and eliminate USB auto-suspend.
+3. Compiles the high-performance wireless driver against your running kernel and installs it.
+4. Deploys the [`airforge`](bin/airforge) CLI (with `hotspot` backwards-compatible alias) to `/usr/local/bin/`.
+5. Enables kernel IP forwarding (`net.ipv4.ip_forward = 1`) and activates the Hotspot.
 
 ---
 
-## 💻 CLI Usage (`hotspot`)
+## 💻 CLI Command Matrix (`airforge`)
 
-Manage your hotspot effortlessly from any terminal:
+Manage your access point effortlessly from any terminal or SSH session:
 
 ```bash
-hotspot status     # Full color HUD: driver status, radio details, and connected clients
-hotspot qr         # Generates an instant QR Code to scan with your smartphone
-hotspot clients    # Shows real-time table of connected devices (IP, MAC, Hostname)
-hotspot traffic    # Live RX/TX packet counts and Megabytes transferred
-hotspot config     # Update SSID, password and channel: hotspot config "MySSID" "MySecretPass" 6
-hotspot on         # Turn on the Wi-Fi Access Point
-hotspot off        # Turn off the Wi-Fi Access Point
-hotspot restart    # Restart network routing and radio broadcast
-hotspot rebuild    # Recompile driver in 3 seconds after upgrading your Linux kernel
-hotspot service    # Manage systemd auto-start (enable | disable | status)
+airforge status              # Displays the full color HUD: driver, radio, gateway, and connected clients
+airforge qr                  # Renders an instant QR Code for smartphone camera pairing
+airforge monitor             # Live dynamic dashboard refreshing throughput and clients every 2 seconds
+airforge clients             # Shows real-time table of connected devices (IP, MAC, Hostname)
+airforge traffic             # Inspects live RX/TX Megabytes and packet volume
+airforge config "SSID" "PW"  # Updates network credentials and restarts broadcast in one command
+airforge on                  # Starts transmission and NAT routing
+airforge off                 # Safely shuts down the access point
+airforge restart             # Refreshes network routing and wireless links
+airforge rebuild             # Recompiles the kernel driver in seconds after a Linux kernel upgrade
+airforge service [action]    # Controls the systemd auto-start daemon (enable | disable | status)
 ```
 
-### 📱 Instant Smartphone Connection via Terminal QR Code
+*(Note: `hotspot` is symlinked to `airforge` for complete backward compatibility).*
+
+---
+
+## 📱 Instant Smartphone Pairing
 
 Run:
 ```bash
-hotspot qr
+airforge qr
 ```
 
-Your terminal renders a clean, high-contrast QR code compliant with the universal Wi-Fi standard (`WIFI:T:WPA;S:...;P:...;;`). Point your iPhone or Android camera at your screen to join the hotspot without typing a single character!
+AirForge generates an instant, high-contrast QR code compliant with the universal Wi-Fi pairing standard (`WIFI:T:WPA;S:...;P:...;;`). Point your phone's camera at the terminal screen to connect immediately without typing passwords.
+
+```
+█████████████████████████████████████
+████ ▄▄▄▄▄ █▀ █▀▀▀▄▄▀██▀██ ▄▄▄▄▄ ████
+████ █   █ █▀ ▄ █▄▄▀▀▀▄▄ █ █   █ ████
+████ █▄▄▄█ █▀█ █▄▀█ ▀▀▄▄ █ █▄▄▄█ ████
+████▄▄▄▄▄▄▄█▄█▄█ █ █▄▀ █ █▄▄▄▄▄▄▄████
+████ ▄▄▄▄▄ █▄█▀█▀ ▄▄ █▀█ █▄█  ▄██████
+████ █   █ █  ▄█▄█▄▄▀▄▄  ▄  ▄██▀█████
+████ █▄▄▄█ █  ▀ ▄█▀█▀▄▀ ███▀██▄ ▀████
+████▄▄▄▄▄▄▄█▄▄█▄███▄▄██▄█▄██▄██▄█████
+█████████████████████████████████████
+```
 
 ---
 
-## 📐 Architecture & Routing
+## 🌐 Real-World Scope & Applications (Alcances)
 
-```
-Internet WAN (Ethernet / Fiber / Cellular)
-                   │
-                   ▼
-┌───────────────────────────────────────────────┐
-│          Linux Kernel Network Stack           │
-│   • net.ipv4.ip_forward = 1 (NAT Routing)     │
-│   • NetworkManager Shared Gateway: 10.42.0.1  │
-└──────────────────────┬────────────────────────┘
-                       │
-                       ▼
-┌───────────────────────────────────────────────┐
-│      Realtek RTL8188EUS Dongle (wlan0)        │
-│   • Custom 8188eu Kernel Module (AP Mode)     │
-│   • Frequency: 2.4 GHz | Channel 6 (2437 MHz) │
-│   • Security: WPA2-PSK (AES/CCMP)             │
-└──────────────────────┬────────────────────────┘
-                       │ 802.11 b/g/n
-                       ▼
-      Connected Smartphones, Laptops & IoT
-```
+AirForge is engineered for production environments, development labs, and everyday field utility:
 
-Detailed technical documentation is available in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+* 🆘 **Emergency Field Hotspot**: Turn any Ethernet-connected desktop or Linux laptop into an instant Wi-Fi station for teams during internet outages or off-grid operations.
+* 🏠 **Headless Server & HomeLab Gateway**: Repurpose a low-power Mini PC, old office tower, or Raspberry Pi into a dedicated 24/7 Wi-Fi router with zero hardware waste.
+* 🔒 **Isolated IoT & Guest Sandbox**: Segregate untrusted IoT appliances (smart plugs, IP cameras, microcontrollers) onto their own isolated subnet (`10.42.0.x/24`) away from your private NAS and LAN.
+* 📱 **Mobile Developer Testing**: Create deterministic local Wi-Fi environments for testing React Native, Flutter, and iOS/Android client-server communication with full control over routes.
+* 🛡️ **Cybersecurity Labs & Penetration Testing**: The underlying patched driver preserves packet injection and monitor mode compatibility for defensive audits and Wi-Fi security testing.
 
 ---
 
-## 🗺️ Project Roadmap
+## 📐 Architecture & Networking Pipeline
 
-This project is built to grow into a universal Linux Wi-Fi hotspot and driver orchestration suite:
-
-* **v1.0 (Current)**: Rock-solid RTL8188EUS Hotspot, Kernel 6.x/7.x driver patcher, terminal QR code, client monitor, and systemd service.
-* **v1.1**: Per-device bandwidth tracking and interactive TUI (Terminal User Interface).
-* **v1.2**: Support for additional problematic Realtek chipsets (**RTL8812AU**, **RTL8821AU**, **RTL8811CU**) and MediaTek **MT7601U**.
-* **v1.3**: Embedded lightweight web management portal (browser dashboard to manage connected clients from your phone).
-* **v1.4**: Captive portal mode and guest Wi-Fi vouchers.
-
-Check out [docs/ROADMAP.md](docs/ROADMAP.md) for full details and milestone targets.
+```
+┌────────────────────────────────────────────────────────┐
+│               Internet WAN Upstream Source             │
+│          (Fiber / Cable Ethernet: enp5s0 / 4G Modem)   │
+└───────────────────────────┬────────────────────────────┘
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│               Linux Kernel Network Subsystem           │
+│   • net.ipv4.ip_forward = 1 (Persistent Sysctl)        │
+│   • iptables / nftables MASQUERADE NAT Engine          │
+│   • dnsmasq Local DHCP Gateway: 10.42.0.1/24           │
+└───────────────────────────┬────────────────────────────┘
+                            │
+             ┌──────────────┴──────────────┐
+             ▼                             ▼
+┌─────────────────────────┐   ┌──────────────────────────┐
+│     NetworkManager      │   │       AirForge Engine    │
+│   (AP Mode Controller)  │ ◄─┼─► │ (Custom Patched Driver   │
+│  wpa_supplicant PMF     │   │  & Hardware PHY Lock)    │
+└────────────┬────────────┘   └────────────┬─────────────┘
+             │                             │
+             └──────────────┬──────────────┘
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│              Wireless USB Adapter (wlan0)              │
+│       Frequency: 2.4 GHz | Channel: 6 (2437 MHz)       │
+│           Security: WPA2-PSK (AES / CCMP)              │
+└───────────────────────────┬────────────────────────────┘
+                            │ 802.11 b/g/n (150 Mbps)
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│         Connected Smartphones, Tablets & Laptops       │
+│           Subnet: 10.42.0.x/24 | DNS: 10.42.0.1        │
+└────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🔧 Troubleshooting
+## 🧭 Roadmap & Growth Vision (Posibles Mejoras)
 
-If your smartphone doesn't detect the Wi-Fi network or you recently upgraded your kernel, check our comprehensive [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for instant fixes.
+AirForge is designed with a scalable, modular architecture to expand into an all-in-one network control platform:
+
+### 🎯 Phase 1: Rock-Solid Base & Kernel Stability (v1.0 - v1.1) ✅
+- [x] Automated compilation and installation for modern Linux Kernels 6.x and 7.x (`7.2.11+`).
+- [x] Intelligent kernel module conflict resolution (blacklisting `rtl8xxxu`).
+- [x] Master/AP mode support with WPA2-PSK (AES/CCMP).
+- [x] Automated IP forwarding and NAT routing between upstream WAN and Wi-Fi.
+- [x] Terminal HUD with live ARP scanning and active client detection.
+- [x] Instant smartphone Wi-Fi QR Code generation in terminal (`qrencode` integration).
+- [x] Dynamic live monitor (`airforge monitor`) with real-time throughput metrics.
+- [x] One-command automated installer (`install.sh`) and clean uninstaller (`uninstall.sh`).
+- [x] Systemd daemon service for automatic boot startup (`airforge.service`).
+
+### 🚀 Phase 2: Multi-Chipset Autodetection & Hardware Expansion (v1.2)
+- [ ] **Multi-Chipset Auto-Patcher**: Plug in any USB dongle and AirForge automatically detects the vendor ID and compiles the matching driver:
+  - Realtek **RTL8812AU / RTL8821AU** (Dual-Band 2.4 / 5 GHz AC 1200).
+  - Realtek **RTL8811CU**.
+  - MediaTek **MT7601U / RT5370**.
+- [ ] **Interactive TUI Dashboard**: Curses-based terminal dashboard with ASCII gauges for real-time signal strength and per-client live speed graphs.
+- [ ] **Per-Client Bandwidth Accounting**: Track total bytes uploaded and downloaded per MAC address with persistent logging.
+
+### 🌐 Phase 3: Web GUI Dashboard & Network Intelligence (v1.3 - v1.4)
+- [ ] **Embedded Web Control Panel**: Lightweight web server running on `http://10.42.0.1:8080` (accessible from any connected phone browser) to view clients, kick unauthorized devices, and update passwords without terminal access.
+- [ ] **Integrated DNS Sinkhole (Pi-hole style)**: Built-in local DNS ad-blocker blocking tracking and telemetry domains for all connected smartphones.
+- [ ] **Bandwidth Limiter (QoS)**: Set maximum download/upload speeds per connected device.
+- [ ] **Captive Portal / Guest Vouchers**: Temporary access pass system for offices, coworking spaces, and cafes.
+
+### 📦 Phase 4: Packaging & Distribution (v1.5)
+- [ ] Official Arch User Repository (AUR) package (`aur/airforge-bin`).
+- [ ] Debian/Ubuntu PPA (`.deb`) and Fedora COPR (`.rpm`) packages.
+- [ ] System tray applet for KDE Plasma and GNOME desktops.
+
+---
+
+## 🔍 Troubleshooting
+
+| Issue | Cause | Fix |
+| :--- | :--- | :--- |
+| **Phone does not see the Wi-Fi network** | Regulatory domain restriction in the driver | Run `sudo iw reg set US` or add the network manually with SSID `Red-Exeq-WiFi` and Security `WPA2-Personal`. |
+| **Connected, but "No Internet Connection"** | Kernel IP forwarding is disabled | Verify with `cat /proc/sys/net/ipv4/ip_forward`. If `0`, enable it via `sudo sysctl -w net.ipv4.ip_forward=1`. AirForge automates this in `/etc/sysctl.d/99-ip-forward.conf`. |
+| **Hotspot stopped working after updating Linux** | Kernel version mismatch | Run `airforge rebuild`. It recompiles and loads the module for your new kernel in 3 seconds. |
+
+Detailed recovery steps are available in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ---
 
 ## 🤝 Contributing
 
-Contributions, bug reports, and hardware testing are welcomed! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+Contributions, bug reports, and hardware testing across different Linux distributions are warmly welcomed. Please check [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
 
 ---
 
 ## 📄 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.  
-Realtek driver code retains original GPL licensing headers.
+Underlying wireless driver source code retains its original GPL licensing terms.
 
 ---
 

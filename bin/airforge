@@ -1,0 +1,355 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# AirForge ⚡ Universal Linux Wi-Fi Hotspot Engine & Driver Orchestrator
+# Author: Exequiel Echevarria <exemetal@hotmail.com> (ExeDevCentral)
+# License: MIT
+# Repository: https://github.com/ExeDevCentral/AirForge
+# ==============================================================================
+
+set -eo pipefail
+
+VERSION="1.1.0"
+CON_NAME="Hotspot"
+IFACE="wlan0"
+SRC_DIR="${AIRFORGE_SRC_DIR:-$HOME/.local/share/rtl8188eus}"
+CLI_NAME="$(basename "$0")"
+
+# HUD Palette
+RED="\033[1;31m"
+GREEN="\033[1;32m"
+BLUE="\033[1;34m"
+YELLOW="\033[1;33m"
+CYAN="\033[1;36m"
+MAGENTA="\033[1;35m"
+BOLD="\033[1m"
+DIM="\033[2m"
+RESET="\033[0m"
+
+mostrar_banner() {
+    echo -e "${CYAN}${BOLD}"
+    cat << "EOF"
+    ___    _        ______                         
+   /   |  (_)_____ / ____/___  _________ ____      
+  / /| | / / ___// /_  / __ \/ ___/ __ `/ _ \     
+ / ___ |/ / /   / __/ / /_/ / /  / /_/ /  __/     
+/_/  |_/_/_/   /_/    \____/_/   \__, /\___/      
+                                /____/            
+    UNIVERSAL LINUX HOTSPOT ENGINE & DRIVER SUITE
+EOF
+    echo -e "${RESET}"
+}
+
+mostrar_ayuda() {
+    mostrar_banner
+    echo -e "${BOLD}Uso:${RESET} ${CLI_NAME} [comando] [opciones]"
+    echo ""
+    echo -e "${BOLD}${CYAN}Comandos principales:${RESET}"
+    echo -e "  ${GREEN}status${RESET}              Muestra el panel HUD: driver, radio, canal y clientes activos"
+    echo -e "  ${GREEN}on | start${RESET}          Enciende el punto de acceso Wi-Fi y el ruteo NAT"
+    echo -e "  ${GREEN}off | stop${RESET}          Apaga la transmisión y detiene el punto de acceso"
+    echo -e "  ${GREEN}restart${RESET}             Reinicia la red inalámbrica y refresca el enlace"
+    echo -e "  ${GREEN}qr${RESET}                  Genera un código QR en terminal para conexión móvil instantánea"
+    echo -e "  ${GREEN}clients | clientes${RESET}  Lista los dispositivos conectados en tiempo real con MAC e IP"
+    echo -e "  ${GREEN}traffic${RESET}             Muestra métricas de paquetes y volumen de datos transferidos"
+    echo -e "  ${GREEN}monitor${RESET}             Monitor en vivo con refresco dinámico cada 2 segundos"
+    echo -e "  ${GREEN}config [ssid] [pw]${RESET}  Modifica interactivamente el SSID, contraseña y canal"
+    echo -e "  ${GREEN}rebuild${RESET}             Recompila e instala el módulo de kernel para la versión actual"
+    echo -e "  ${GREEN}service [accion]${RESET}    Gestiona el servicio systemd (enable, disable, status)"
+    echo -e "  ${GREEN}version${RESET}             Muestra la versión instalada de AirForge"
+    echo ""
+    echo -e "${BOLD}${DIM}Repositorio Oficial: https://github.com/ExeDevCentral/AirForge${RESET}"
+}
+
+cmd_status() {
+    echo -e "${BOLD}${BLUE}╔══════════════════════════════════════════════════════════════════╗${RESET}"
+    echo -e "${BOLD}${BLUE}║       AIRFORGE ⚡ ESTADO DEL PUNTO DE ACCESO INALÁMBRICO         ║${RESET}"
+    echo -e "${BOLD}${BLUE}╚══════════════════════════════════════════════════════════════════╝${RESET}"
+    
+    # 1. Driver Kernel
+    echo ""
+    echo -e "${BOLD}${CYAN}[1/4] Estado del Controlador de Kernel:${RESET}"
+    if lsmod | grep -q "^8188eu "; then
+        echo -e "  Módulo: ${GREEN}● 8188eu activo${RESET} (Driver optimizado con modo Master/AP)"
+    elif lsmod | grep -q "rtl8xxxu"; then
+        echo -e "  Módulo: ${YELLOW}▲ rtl8xxxu activo${RESET} (Driver genérico de fábrica, modo AP inestable)"
+    else
+        echo -e "  Módulo: ${RED}✖ Ningún controlador Wi-Fi cargado en el kernel${RESET}"
+    fi
+
+    # 2. Estado de interfaz radio
+    echo ""
+    echo -e "${BOLD}${CYAN}[2/4] Interfaz de Radio (${IFACE}):${RESET}"
+    local oper ip_addr
+    oper=$(cat /sys/class/net/"$IFACE"/operstate 2>/dev/null || echo "down")
+    ip_addr=$(ip -4 addr show dev "$IFACE" 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n1 || echo "Sin IP")
+
+    if [ "$oper" = "up" ]; then
+        echo -e "  Interfaz: ${BOLD}$IFACE${RESET} | Operstate: ${GREEN}UP (Transmitiendo)${RESET}"
+        echo -e "  Gateway Local (DHCP): ${BOLD}${GREEN}$ip_addr${RESET}"
+    else
+        echo -e "  Interfaz: ${BOLD}$IFACE${RESET} | Operstate: ${YELLOW}DOWN / INACTIVO${RESET}"
+    fi
+
+    # 3. Credenciales y Radio
+    echo ""
+    echo -e "${BOLD}${CYAN}[3/4] Parámetros de Transmisión Inalámbrica:${RESET}"
+    local ssid psk chan band
+    ssid=$(nmcli -g 802-11-wireless.ssid connection show "$CON_NAME" 2>/dev/null || echo "Red-Exeq-WiFi")
+    psk=$(nmcli -s -g 802-11-wireless-security.psk connection show "$CON_NAME" 2>/dev/null || echo "Central1985")
+    chan=$(nmcli -g 802-11-wireless.channel connection show "$CON_NAME" 2>/dev/null || echo "6")
+    band=$(nmcli -g 802-11-wireless.band connection show "$CON_NAME" 2>/dev/null || echo "bg")
+
+    echo -e "  SSID (Nombre de red): ${BOLD}${GREEN}${ssid}${RESET}"
+    echo -e "  Contraseña de acceso: ${YELLOW}${psk}${RESET}"
+    echo -e "  Cifrado de Seguridad: WPA2-PSK (AES/CCMP)"
+    echo -e "  Frecuencia y Canal:   2.4 GHz (${band}) — Canal ${chan} (2437 MHz)"
+
+    # 4. Enrutamiento e IP Forwarding
+    local ip_forward
+    ip_forward=$(cat /proc/sys/net/ipv4/ip_forward 2>/dev/null || echo "0")
+    if [ "$ip_forward" = "1" ]; then
+        echo -e "  Ruteo NAT / Forward:  ${GREEN}Habilitado (Tráfico compartido hacia Internet)${RESET}"
+    else
+        echo -e "  Ruteo NAT / Forward:  ${RED}Deshabilitado (Red local aislada)${RESET}"
+    fi
+
+    # 5. Clientes Conectados
+    echo ""
+    echo -e "${BOLD}${CYAN}[4/4] Dispositivos Conectados en este Momento:${RESET}"
+    cmd_clientes
+}
+
+cmd_clientes() {
+    local count=0
+
+    while read -r ip _ _ mac _ dev; do
+        if [ "$dev" = "$IFACE" ] && [ "$mac" != "00:00:00:00:00:00" ]; then
+            count=$((count + 1))
+            local host="Dispositivo Móvil"
+            if command -v getent &>/dev/null; then
+                host=$(getent hosts "$ip" 2>/dev/null | awk '{print $2}' || echo "Dispositivo Móvil")
+            fi
+            echo -e "  ${GREEN}●${RESET} Dispositivo #${count}: IP ${BOLD}${GREEN}$ip${RESET}  |  MAC: ${CYAN}$mac${RESET}  |  Host: $host"
+        fi
+    done < /proc/net/arp
+
+    if [ "$count" -eq 0 ]; then
+        echo -e "  ${YELLOW}(No hay clientes inalámbricos asociados actualmente)${RESET}"
+    else
+        echo -e "  ${BOLD}Total conectados:${RESET} ${GREEN}$count dispositivo(s)${RESET}"
+    fi
+}
+
+cmd_qr() {
+    local ssid psk
+    ssid=$(nmcli -g 802-11-wireless.ssid connection show "$CON_NAME" 2>/dev/null || echo "Red-Exeq-WiFi")
+    psk=$(nmcli -s -g 802-11-wireless-security.psk connection show "$CON_NAME" 2>/dev/null || echo "Central1985")
+
+    echo -e "${BOLD}${CYAN}=== CÓDIGO QR PARA CONEXIÓN INSTANTÁNEA ===${RESET}"
+    echo -e "Escaneá con la cámara de tu celular para unirte a la red sin escribir la clave:"
+    echo ""
+
+    local qr_payload="WIFI:T:WPA;S:${ssid};P:${psk};;"
+    if command -v qrencode &>/dev/null; then
+        qrencode -t UTF8 "$qr_payload"
+        echo ""
+        echo -e "  ${BOLD}Red:${RESET} ${GREEN}$ssid${RESET}"
+        echo -e "  ${BOLD}Clave:${RESET} ${YELLOW}$psk${RESET}"
+    else
+        echo -e "${YELLOW}Aviso: 'qrencode' no está instalado. Podés instalarlo con 'pacman -S qrencode' o 'apt install qrencode'.${RESET}"
+        echo -e "Cadena de conexión estándar: ${BOLD}$qr_payload${RESET}"
+    fi
+}
+
+cmd_on() {
+    echo -e "${CYAN}Levantando punto de acceso con AirForge...${RESET}"
+    if ! lsmod | grep -q "^8188eu "; then
+        echo -e "${YELLOW}Cargando módulo 8188eu en el kernel...${RESET}"
+        pkexec modprobe 8188eu 2>/dev/null || sudo modprobe 8188eu
+    fi
+    nmcli connection up "$CON_NAME"
+    echo -e "${GREEN}✓ Punto de acceso activo y transmitiendo.${RESET}"
+}
+
+cmd_off() {
+    echo -e "${YELLOW}Deteniendo punto de acceso Wi-Fi...${RESET}"
+    nmcli connection down "$CON_NAME" 2>/dev/null || true
+    echo -e "${GREEN}✓ Punto de acceso apagado.${RESET}"
+}
+
+cmd_restart() {
+    cmd_off
+    sleep 1
+    cmd_on
+}
+
+cmd_traffic() {
+    echo -e "${BOLD}${CYAN}=== MÉTRICAS DE TRÁFICO (${IFACE}) ===${RESET}"
+    if [ ! -f /proc/net/dev ]; then
+        echo -e "${RED}No se pudo acceder a /proc/net/dev${RESET}"
+        return 1
+    fi
+
+    local rx_bytes tx_bytes rx_pkts tx_pkts
+    read -r rx_bytes rx_pkts _ _ _ _ _ _ tx_bytes tx_pkts _ < <(grep "^ *$IFACE:" /proc/net/dev | sed "s/^ *$IFACE://")
+
+    if [ -z "$rx_bytes" ]; then
+        echo -e "${YELLOW}La interfaz $IFACE no registra estadísticas activas.${RESET}"
+        return 0
+    fi
+
+    local rx_mb tx_mb
+    rx_mb=$(awk "BEGIN {printf \"%.2f\", $rx_bytes / 1048576}")
+    tx_mb=$(awk "BEGIN {printf \"%.2f\", $tx_bytes / 1048576}")
+
+    echo -e "  ${BOLD}Recibido (RX):${RESET}    ${GREEN}${rx_mb} MB${RESET} (${rx_pkts} paquetes)"
+    echo -e "  ${BOLD}Transmitido (TX):${RESET} ${GREEN}${tx_mb} MB${RESET} (${tx_pkts} paquetes)"
+}
+
+cmd_monitor() {
+    echo -e "${CYAN}Iniciando monitor en vivo (Presione Ctrl+C para salir)...${RESET}"
+    sleep 1
+    while true; do
+        clear
+        mostrar_banner
+        echo -e "${BOLD}${BLUE}=== AIRFORGE LIVE MONITOR (${IFACE}) ===${RESET} [$(date +'%T')]"
+        echo ""
+        cmd_traffic
+        echo ""
+        cmd_clientes
+        sleep 2
+    done
+}
+
+cmd_config() {
+    local nuevo_ssid="$1"
+    local nuevo_psk="$2"
+    local nuevo_canal="${3:-6}"
+
+    if [ -z "$nuevo_ssid" ] || [ -z "$nuevo_psk" ]; then
+        echo -e "${BOLD}Uso:${RESET} ${CLI_NAME} config [nuevo_ssid] [nueva_contraseña] [canal_opcional]"
+        echo -e "Ejemplo: ${CLI_NAME} config MiWifiPro ClaveUltraSegura123 6"
+        return 1
+    fi
+
+    echo -e "${CYAN}Actualizando configuración en AirForge...${RESET}"
+    nmcli connection modify "$CON_NAME" \
+        802-11-wireless.ssid "$nuevo_ssid" \
+        802-11-wireless.channel "$nuevo_canal" \
+        802-11-wireless-security.psk "$nuevo_psk"
+
+    echo -e "${GREEN}✓ Parámetros actualizados con éxito.${RESET}"
+    echo -e "Reiniciando red para aplicar cambios..."
+    cmd_restart
+}
+
+cmd_rebuild() {
+    echo -e "${BOLD}${BLUE}=== RECOMPILACIÓN DEL MÓDULO DE KERNEL ===${RESET}"
+    echo -e "Kernel objetivo: ${BOLD}$(uname -r)${RESET}"
+
+    if [ ! -d "$SRC_DIR" ]; then
+        local repo_driver_dir
+        repo_driver_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../driver" 2>/dev/null && pwd || true)"
+        if [ -d "$repo_driver_dir" ]; then
+            SRC_DIR="$repo_driver_dir"
+        else
+            echo -e "${RED}Error: Directorio de código fuente no encontrado en $SRC_DIR${RESET}"
+            exit 1
+        fi
+    fi
+
+    echo -e "Compilando en: ${CYAN}$SRC_DIR${RESET}..."
+    cd "$SRC_DIR"
+    make clean >/dev/null 2>&1 || true
+    make -j"$(nproc)"
+
+    if [ ! -f "8188eu.ko" ]; then
+        echo -e "${RED}Error: La compilación no generó 8188eu.ko.${RESET}"
+        exit 1
+    fi
+
+    strip --strip-unneeded 8188eu.ko
+    echo -e "${GREEN}Módulo compilado y optimizado.${RESET}"
+
+    local dest="/lib/modules/$(uname -r)/kernel/drivers/net/wireless/"
+    echo -e "Instalando en ${dest}..."
+    pkexec bash -c "mkdir -p '$dest' && install -p -m 644 8188eu.ko '$dest' && depmod -a && modprobe -r rtl8xxxu 2>/dev/null || true; modprobe 8188eu" || sudo bash -c "mkdir -p '$dest' && install -p -m 644 8188eu.ko '$dest' && depmod -a && modprobe -r rtl8xxxu 2>/dev/null || true; modprobe 8188eu"
+
+    echo -e "${GREEN}✓ Driver reinstalado y cargado correctamente en el kernel.${RESET}"
+}
+
+cmd_service() {
+    local action="${1:-status}"
+    case "$action" in
+        enable)
+            pkexec systemctl enable airforge.service 2>/dev/null || sudo systemctl enable airforge.service
+            echo -e "${GREEN}✓ Servicio AirForge habilitado para inicio automático en el booteo.${RESET}"
+            ;;
+        disable)
+            pkexec systemctl disable airforge.service 2>/dev/null || sudo systemctl disable airforge.service
+            echo -e "${YELLOW}✓ Servicio AirForge deshabilitado del booteo.${RESET}"
+            ;;
+        start)
+            pkexec systemctl start airforge.service 2>/dev/null || sudo systemctl start airforge.service
+            ;;
+        stop)
+            pkexec systemctl stop airforge.service 2>/dev/null || sudo systemctl stop airforge.service
+            ;;
+        status)
+            systemctl status airforge.service 2>/dev/null || systemctl status hotspot.service --no-pager || true
+            ;;
+        *)
+            echo -e "${RED}Acción de servicio no reconocida: $action${RESET}"
+            echo -e "Opciones: enable | disable | start | stop | status"
+            ;;
+    esac
+}
+
+case "${1:-status}" in
+    status)
+        cmd_status
+        ;;
+    on|start)
+        cmd_on
+        ;;
+    off|stop)
+        cmd_off
+        ;;
+    restart)
+        cmd_restart
+        ;;
+    clients|clientes)
+        cmd_clientes
+        ;;
+    qr)
+        cmd_qr
+        ;;
+    traffic)
+        cmd_traffic
+        ;;
+    monitor)
+        cmd_monitor
+        ;;
+    config)
+        shift
+        cmd_config "$@"
+        ;;
+    rebuild)
+        cmd_rebuild
+        ;;
+    service)
+        shift
+        cmd_service "$@"
+        ;;
+    version|-v|--version)
+        echo "AirForge v${VERSION}"
+        ;;
+    help|-h|--help)
+        mostrar_ayuda
+        ;;
+    *)
+        echo -e "${RED}Opción no reconocida: $1${RESET}"
+        mostrar_ayuda
+        exit 1
+        ;;
+esac

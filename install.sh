@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# rtl8188eu-hotspot-toolkit: Automated System Installer
+# AirForge ⚡ Automated System Installer
 # Author: Exequiel Echevarria <exemetal@hotmail.com> (ExeDevCentral)
 # License: MIT
+# Repository: https://github.com/ExeDevCentral/AirForge
 # ==============================================================================
 
 set -eo pipefail
@@ -16,12 +17,13 @@ RESET="\033[0m"
 
 echo -e "${CYAN}${BOLD}"
 cat << "EOF"
-  ____ _____ _     ___  _  ___   ___  _____ _   _ 
- |  _ \_   _| |   / _ \/ |( _ ) ( _ )| ____| | | |
- | |_) || | | |  | (_) | |/ _ \ / _ \|  _| | | | |
- |  _ < | | | |___\__, | | (_) | (_) | |___| |_| |
- |_| \_\|_| |_____| /_/|_|\___/ \___/|_____|\___/ 
-          INSTALLER & SYSTEM INTEGRATION
+    ___    _        ______                         
+   /   |  (_)_____ / ____/___  _________ ____      
+  / /| | / / ___// /_  / __ \/ ___/ __ `/ _ \     
+ / ___ |/ / /   / __/ / /_/ / /  / /_/ /  __/     
+/_/  |_/_/_/   /_/    \____/_/   \__, /\___/      
+                                /____/            
+          AIRFORGE AUTOMATED INSTALLER v1.1.0
 EOF
 echo -e "${RESET}"
 
@@ -46,13 +48,13 @@ if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
     echo -e "${YELLOW}Faltan herramientas esenciales: ${MISSING_PKGS[*]}${RESET}"
     if command -v pacman &>/dev/null; then
         echo -e "Instalando en Arch Linux..."
-        pacman -S --needed --noconfirm base-devel bc networkmanager dkms linux-headers
+        pacman -S --needed --noconfirm base-devel bc networkmanager dkms linux-headers qrencode
     elif command -v apt-get &>/dev/null; then
         echo -e "Instalando en Debian/Ubuntu..."
-        apt-get update && apt-get install -y build-essential bc network-manager dkms "linux-headers-$KERNEL_VER"
+        apt-get update && apt-get install -y build-essential bc network-manager dkms "linux-headers-$KERNEL_VER" qrencode
     elif command -v dnf &>/dev/null; then
         echo -e "Instalando en Fedora/RHEL..."
-        dnf install -y make gcc bc NetworkManager dkms "kernel-devel-$KERNEL_VER"
+        dnf install -y make gcc bc NetworkManager dkms "kernel-devel-$KERNEL_VER" qrencode
     else
         echo -e "${RED}Por favor instale manualmente: ${MISSING_PKGS[*]} y cabeceras del kernel.${RESET}"
         exit 1
@@ -70,7 +72,7 @@ sysctl -w net.ipv4.ip_forward=1 >/dev/null
 echo -e "${GREEN}✓ Módulo rtl8xxxu bloqueado y ahorro de energía desactivado.${RESET}"
 
 echo ""
-echo -e "${BOLD}${CYAN}[3/6] Compilando e instalando el controlador 8188eu...${RESET}"
+echo -e "${BOLD}${CYAN}[3/6] Compilando e instalando el controlador optimizado...${RESET}"
 cd "$SCRIPT_DIR/driver"
 make clean >/dev/null 2>&1 || true
 make -j"$(nproc)"
@@ -88,13 +90,15 @@ depmod -a
 echo -e "${GREEN}✓ Módulo 8188eu instalado exitosamente para kernel $KERNEL_VER.${RESET}"
 
 echo ""
-echo -e "${BOLD}${CYAN}[4/6] Instalando utilidad CLI 'hotspot'...${RESET}"
-install -m 755 "$SCRIPT_DIR/bin/hotspot" /usr/local/bin/hotspot
-echo -e "${GREEN}✓ Comando 'hotspot' disponible globalmente en /usr/local/bin/hotspot.${RESET}"
+echo -e "${BOLD}${CYAN}[4/6] Instalando utilidad CLI 'airforge' y alias 'hotspot'...${RESET}"
+install -m 755 "$SCRIPT_DIR/bin/airforge" /usr/local/bin/airforge
+ln -sf /usr/local/bin/airforge /usr/local/bin/hotspot
+echo -e "${GREEN}✓ Comandos 'airforge' y 'hotspot' disponibles en /usr/local/bin/.${RESET}"
 
 echo ""
 echo -e "${BOLD}${CYAN}[5/6] Instalando servicio de inicio automático systemd...${RESET}"
-install -m 644 "$SCRIPT_DIR/config/hotspot.service" /etc/systemd/system/hotspot.service
+install -m 644 "$SCRIPT_DIR/config/hotspot.service" /etc/systemd/system/airforge.service
+ln -sf /etc/systemd/system/airforge.service /etc/systemd/system/hotspot.service
 systemctl daemon-reload
 echo -e "${GREEN}✓ Servicio systemd configurado.${RESET}"
 
@@ -106,10 +110,10 @@ modprobe 8188eu 2>/dev/null || true
 # Configurar conexión NetworkManager por defecto si no existe
 if ! nmcli connection show Hotspot &>/dev/null; then
     echo -e "Creando perfil de conexión Hotspot en NetworkManager..."
-    nmcli connection add type wifi ifname wlan0 con-name Hotspot autoconnect no ssid "Red-Exeq-WiFi"
+    nmcli connection add type wifi ifname wlan0 con-name Hotspot autoconnect no ssid "AirForge-WiFi"
     nmcli connection modify Hotspot 802-11-wireless.mode ap 802-11-wireless.band bg 802-11-wireless.channel 6
     nmcli connection modify Hotspot 802-11-wireless-security.key-mgmt wpa-psk 802-11-wireless-security.proto rsn 802-11-wireless-security.pairwise ccmp 802-11-wireless-security.group ccmp
-    nmcli connection modify Hotspot 802-11-wireless-security.psk "Central1985"
+    nmcli connection modify Hotspot 802-11-wireless-security.psk "ConexionSegura2026!"
     nmcli connection modify Hotspot ipv4.method shared
 fi
 
@@ -117,10 +121,11 @@ nmcli connection up Hotspot >/dev/null 2>&1 || true
 
 echo ""
 echo -e "${BOLD}${GREEN}══════════════════════════════════════════════════════════════════${RESET}"
-echo -e "${BOLD}${GREEN}       ¡INSTALACIÓN COMPLETADA CON ÉXITO!                        ${RESET}"
+echo -e "${BOLD}${GREEN}       ¡AIRFORGE INSTALADO Y ACTIVADO CON ÉXITO!                 ${RESET}"
 echo -e "${BOLD}${GREEN}══════════════════════════════════════════════════════════════════${RESET}"
 echo -e "Podés gestionar tu red con el comando:"
-echo -e "  ${BOLD}${CYAN}hotspot status${RESET}     -> Ver estado de la red y clientes"
-echo -e "  ${BOLD}${CYAN}hotspot qr${RESET}         -> Ver código QR para conectar el teléfono"
-echo -e "  ${BOLD}${CYAN}hotspot help${RESET}       -> Ver todos los comandos"
+echo -e "  ${BOLD}${CYAN}airforge status${RESET}     -> Ver panel HUD de la red y clientes"
+echo -e "  ${BOLD}${CYAN}airforge qr${RESET}         -> Ver código QR para conectar el teléfono"
+echo -e "  ${BOLD}${CYAN}airforge monitor${RESET}    -> Monitor dinámico en vivo"
+echo -e "  ${BOLD}${CYAN}airforge help${RESET}       -> Ver todos los comandos disponibles"
 echo ""

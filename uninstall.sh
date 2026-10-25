@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# rtl8188eu-hotspot-toolkit: Automated System Uninstaller
+# AirForge ⚡ Automated System Uninstaller
 # Author: Exequiel Echevarria <exemetal@hotmail.com> (ExeDevCentral)
 # License: MIT
+# Repository: https://github.com/ExeDevCentral/AirForge
 # ==============================================================================
 
 set -eo pipefail
@@ -19,17 +20,17 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-echo -e "${YELLOW}${BOLD}Desinstalando rtl8188eu-hotspot-toolkit...${RESET}"
+echo -e "${YELLOW}${BOLD}Desinstalando AirForge...${RESET}"
 
 # Detener conexión y servicio
 nmcli connection down Hotspot 2>/dev/null || true
-systemctl stop hotspot.service 2>/dev/null || true
-systemctl disable hotspot.service 2>/dev/null || true
-rm -f /etc/systemd/system/hotspot.service
+systemctl stop airforge.service 2>/dev/null || systemctl stop hotspot.service 2>/dev/null || true
+systemctl disable airforge.service 2>/dev/null || systemctl disable hotspot.service 2>/dev/null || true
+rm -f /etc/systemd/system/airforge.service /etc/systemd/system/hotspot.service
 systemctl daemon-reload
 
-# Eliminar binario
-rm -f /usr/local/bin/hotspot
+# Eliminar binarios
+rm -f /usr/local/bin/airforge /usr/local/bin/hotspot
 
 # Eliminar configuraciones del kernel
 rm -f /etc/modprobe.d/8188eu.conf
@@ -40,4 +41,4 @@ KERNEL_VER="$(uname -r)"
 rm -f "/lib/modules/$KERNEL_VER/kernel/drivers/net/wireless/8188eu.ko"
 depmod -a
 
-echo -e "${GREEN}✓ Desinstalación completada con éxito. El sistema ha sido restaurado.${RESET}"
+echo -e "${GREEN}✓ Desinstalación completada con éxito. AirForge ha sido removido del sistema.${RESET}"
