@@ -5,7 +5,7 @@ This document outlines the engineering roadmap for **Baliza**, moving from drive
 ---
 
 ## 🎯 Phase 1: Core AP Stability & Modern Kernel Port (v1.0 – v1.2) [COMPLETED] ✅
-- [x] **Kernel 6.x / 7.x Compatibility**: Tested and verified on Linux `7.2.11-arch1-1`.
+- [x] **Kernel 6.x / 7.x Compatibility**: Tested and verified on Linux `7.2.14-arch1-1`.
 - [x] **Timer & cfg80211 API Porting**: Isolated patches for `timer_delete_sync` and `cfg80211_ops` changes in `patches/`.
 - [x] **Hardware PHY Lock**: Disabled USB power-saving dropouts (`rtw_power_mgnt=0 rtw_ips_mode=0 rtw_enusbss=0`).
 - [x] **Deterministic Driver Isolation**: Automatic blacklisting of defective in-tree `rtl8xxxu` driver.

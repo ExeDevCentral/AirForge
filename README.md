@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Baliza-v1.2.0-00d4ff?style=for-the-badge&logo=wifi&logoColor=white" alt="Version">
-  <img src="https://img.shields.io/badge/Kernel_Tested-7.2.11--arch1--1-34d399?style=for-the-badge&logo=linux&logoColor=white" alt="Kernel">
+  <img src="https://img.shields.io/badge/Kernel_Tested-7.2.14--arch1--1-34d399?style=for-the-badge&logo=linux&logoColor=white" alt="Kernel">
   <img src="https://img.shields.io/badge/License-GPL--2.0-f59e0b?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/Hardware-RTL8188EUS_%5B0bda%3A8179%5D-ec4899?style=for-the-badge" alt="Hardware">
 </p>
@@ -27,7 +27,7 @@ El chipset Realtek RTL8188EUS (USB ID `0bda:8179`) es uno de los adaptadores ina
 | Problema en Linux Moderno | Diagnóstico y Síntoma | Solución Implementada en Baliza |
 | :--- | :--- | :--- |
 | **`rtl8xxxu` falla en modo AP** | El driver in-tree `rtl8xxxu` (mac80211) no gestiona el hardware queue de tramas de baliza (*Beacon Frames*) en el RTL8188EUS. El BSS no emite balizas periódicas y arroja timeouts en `NL80211_CMD_START_AP`. | **Driver `8188eu` optimizado**: Se desactiva `rtl8xxxu` en modprobe y se compila el módulo `8188eu` con soporte completo de balizas por hardware en modo Master/AP. |
-| **Ruptura de compilación en Linux 6.x y 7.x** | Deprecación de `del_timer_sync` en Linux 6.15+, migración de `net_device` a `wireless_dev` en `cfg80211_ops` (Linux 7.1+), y cambios de firma en `remain_on_channel` (Linux 7.2/7.3). | **Parches quirúrgicos documentados**: Árbol de código parcheado y probado en `Linux 7.2.11-arch1-1`. Diffs aislados disponibles en [`patches/`](patches/). |
+| **Ruptura de compilación en Linux 6.x y 7.x** | Deprecación de `del_timer_sync` en Linux 6.15+, migración de `net_device` a `wireless_dev` en `cfg80211_ops` (Linux 7.1+), y cambios de firma en `remain_on_channel` (Linux 7.2/7.3). | **Parches quirúrgicos documentados**: Árbol de código parcheado y probado en `Linux 7.2.14-arch1-1`. Diffs aislados disponibles en [`patches/`](patches/). |
 | **Desconexiones fortuitas (Ghost drops)** | El subsistema USB entra en suspensión selectiva agresiva (*auto-suspend*) tras inactividad del enlace de radio, congelando el frontend de RF. | **Bloqueo PHY por opciones de módulo**: Parámetros persistentes `rtw_power_mgnt=0 rtw_ips_mode=0 rtw_enusbss=0` en `/etc/modprobe.d/8188eu.conf`. |
 | **Complejidad de emparejamiento** | Escribir contraseñas WPA2 complejas en dispositivos móviles es tedioso y propenso a errores. | **Código QR ANSI en Terminal**: Generador compatible con el estándar Wi-Fi Alliance (`baliza qr`) para escaneo directo con cámara móvil. |
 | **Falta de visibilidad de red** | Dificultad para auditar quién está asociado y cuánto ancho de banda consume. | **Monitor HUD en vivo**: Detección de estaciones en tiempo real mediante tablas ARP del kernel y contadores de paquetes RX/TX. |
@@ -42,7 +42,7 @@ Las capacidades del driver y la estabilidad del modo AP fueron verificadas en la
 | :--- | :--- |
 | **Chipset Wi-Fi** | Realtek RTL8188EUS 802.11n Wireless Network Adapter |
 | **USB ID (lsusb)** | `0bda:8179 Realtek Semiconductor Corp.` |
-| **Kernel Linux** | `7.2.11-arch1-1` (x86_64) |
+| **Kernel Linux** | `7.2.14-arch1-1` (x86_64) |
 | **Distribución** | EndeavourOS / Arch Linux (Rolling Release) |
 | **Modos de Interfaz (`iw list`)** | `IBSS`, `managed`, `AP`, `monitor`, `P2P-client`, `P2P-GO` |
 | **Cifrados Soportados** | WEP40, WEP104, TKIP, CCMP-128 (WPA2-PSK) |
@@ -139,7 +139,7 @@ Para mantener el rigor técnico, se declaran explícitamente las siguientes rest
 ## 🧭 Estado del Proyecto y Roadmap
 
 ### Fase 1: Estabilidad de Kernel y Modo AP Core (v1.0 – v1.2) ✅
-- [x] Parches de compatibilidad probados en Linux 6.x y 7.x (`7.2.11-arch1-1`).
+- [x] Parches de compatibilidad probados en Linux 6.x y 7.x (`7.2.14-arch1-1`).
 - [x] Bloqueo determinista de `rtl8xxxu` y anulación de suspensión USB.
 - [x] Modo AP funcional con balizas de hardware en 2.4 GHz WPA2-PSK.
 - [x] Reenvío IPv4 y ruteo NAT masquerade transparente.

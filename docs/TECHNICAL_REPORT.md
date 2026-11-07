@@ -2,7 +2,7 @@
 
 **Autor:** Exequiel Echevarria (`ExeDevCentral`) — Rosario, Argentina  
 **Fecha de informe:** Octubre 2026  
-**Entorno de referencia:** Linux Kernel `7.2.11-arch1-1` (x86_64), EndeavourOS  
+**Entorno de referencia:** Linux Kernel `7.2.14-arch1-1` (x86_64), EndeavourOS  
 **Repositorio:** [https://github.com/ExeDevCentral/Baliza](https://github.com/ExeDevCentral/Baliza)  
 **Licencia:** GNU General Public License v2.0 (GPL-2.0)
 
@@ -135,7 +135,7 @@ La adopción de `strscpy()` en lugar del deprecado `strncpy()` en `hal/hal_com_p
 ### 5.1 Entorno de Medición
 Las pruebas fueron conducidas sobre el siguiente entorno productivo real:
 - **Host:** Computadora de escritorio x86_64
-- **Kernel:** `7.2.11-arch1-1`
+- **Kernel:** `7.2.14-arch1-1`
 - **Compilador:** GCC 15 / Clang 19
 - **Adaptador:** USB 2.0 Realtek RTL8188EUS (`0bda:8179`)
 - **Topología de red:** Enlace de subida (WAN) Gigabit Ethernet `enp5s0`, Interfaz AP Wi-Fi `wlan0` asignada al segmento `10.42.0.1/24`.

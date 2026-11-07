@@ -48,4 +48,4 @@ Upstream driver trees fail to build on Linux 6.x/7.x due to:
 - Refactored `remain_on_channel` parameters in Linux 7.2 and 7.3.
 - Deprecation of `strncpy` in favor of `strscpy` in Linux 7.2+.
 
-Baliza bundles discrete, documented patches in `patches/` tested against Linux `7.2.11-arch1-1`.
+Baliza bundles discrete, documented patches in `patches/` tested against Linux `7.2.14-arch1-1`.
