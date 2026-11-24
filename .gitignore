@@ -21,3 +21,6 @@ Module.symvers
 
 # Build logs
 *.log
+
+# Local environment and build artifacts
+.env
